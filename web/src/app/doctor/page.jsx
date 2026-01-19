@@ -179,7 +179,7 @@ export default function DoctorPage() {
       patientDetails = searchValue;
     } else if (typeof searchValue === 'string') {
       // Typed in input
-      if (ethers.utils.isAddress(searchValue)) {
+      if (ethers.isAddress(searchValue)) {
         targetAddress = searchValue.toLowerCase();
         // Try to find details in list
         patientDetails = myPatients.find(p => p.address === targetAddress) || { address: targetAddress, name: "External Patient" };
