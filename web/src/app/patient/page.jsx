@@ -425,14 +425,29 @@ export function DoctorsView({ doctors, onUpdate }) {
       setLoading(doctor.address);
       const signer = await getSigner();
       const contract = await getContract(signer);
+      const currentAccount = await getCurrentAccount();
 
       let tx;
       if (doctor.isApproved) {
+        // Revoking access
         tx = await contract.revokeDoctor(doctor.address);
+        await tx.wait();
+
+        // Remove from Firebase tracking
+        const doctorPatientsPath = `doctor_patients/${doctor.address.toLowerCase()}/${currentAccount.toLowerCase()}`;
+        await remove(ref(db, doctorPatientsPath));
       } else {
+        // Granting access
         tx = await contract.approveDoctor(doctor.address);
+        await tx.wait();
+
+        // Add to Firebase tracking so doctor can see this patient in their list
+        const doctorPatientsPath = `doctor_patients/${doctor.address.toLowerCase()}/${currentAccount.toLowerCase()}`;
+        await set(ref(db, doctorPatientsPath), {
+          patientAddress: currentAccount.toLowerCase(),
+          grantedAt: new Date().toISOString()
+        });
       }
-      await tx.wait();
 
       onUpdate(); // Reload doctors to get fresh status
     } catch (e) {

@@ -9,13 +9,14 @@ import {
   getProvider,
 } from "@/utils/contract";
 import { db } from "@/utils/firebase";
-import { ref, query, orderByChild, equalTo, get, update } from "firebase/database";
+import { ref, get, update } from "firebase/database";
 
 export default function AdminPage() {
   const [account, setAccount] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const [doctors, setDoctors] = useState([]);
+  const [registeredDoctorsWithDetails, setRegisteredDoctorsWithDetails] = useState([]);
   const [pendingDoctors, setPendingDoctors] = useState([]);
   const [newDoctorAddress, setNewDoctorAddress] = useState("");
   const [error, setError] = useState(null);
@@ -65,17 +66,56 @@ export default function AdminPage() {
       setDoctors(allDoctors);
 
       // Load pending doctors from Realtime DB
+      // Using client-side filtering instead of orderByChild to avoid indexing requirements
       const doctorsRef = ref(db, "doctors");
-      const pendingQuery = query(doctorsRef, orderByChild("status"), equalTo("pending"));
-      const snapshot = await get(pendingQuery);
+      const snapshot = await get(doctorsRef);
+
+      console.log("All doctors data:", snapshot.val());
 
       const pending = [];
+      const registered = [];
+
       if (snapshot.exists()) {
-        snapshot.forEach((childSnapshot) => {
-          pending.push({ id: childSnapshot.key, ...childSnapshot.val() });
+        const allDoctorsData = snapshot.val();
+
+        // Filter for pending status on client-side
+        Object.keys(allDoctorsData).forEach((key) => {
+          if (allDoctorsData[key].status === "pending") {
+            pending.push({ id: key, ...allDoctorsData[key] });
+          }
+        });
+
+        // Enrich registered doctors (from blockchain) with Firebase data
+        allDoctors.forEach((doctorAddress) => {
+          const lowercaseAddr = doctorAddress.toLowerCase();
+          const doctorData = allDoctorsData[lowercaseAddr];
+
+          if (doctorData) {
+            registered.push({
+              address: doctorAddress,
+              name: doctorData.name || "Unknown",
+              profession: doctorData.profession || "N/A",
+              hospital: doctorData.hospital || "N/A",
+              status: doctorData.status || "verified"
+            });
+          } else {
+            // Doctor is on blockchain but not in Firebase (manually added)
+            registered.push({
+              address: doctorAddress,
+              name: "Unknown Doctor",
+              profession: "N/A",
+              hospital: "N/A",
+              status: "verified"
+            });
+          }
         });
       }
+
+      console.log("Filtered pending doctors:", pending);
+      console.log("Registered doctors with details:", registered);
+
       setPendingDoctors(pending);
+      setRegisteredDoctorsWithDetails(registered);
 
     } catch (err) {
       console.error("Error loading doctors:", err);
@@ -390,28 +430,27 @@ export default function AdminPage() {
         {/* Registered Doctors */}
         <div className="bg-white rounded-xl p-6 shadow-sm border">
           <h2 className="text-xl font-bold text-gray-900 mb-4">
-            Registered Doctors ({doctors.length})
+            Registered Doctors ({registeredDoctorsWithDetails.length})
           </h2>
 
-          {doctors.length === 0 ? (
+          {registeredDoctorsWithDetails.length === 0 ? (
             <p className="text-gray-500 text-center py-8">
               No doctors registered yet
             </p>
           ) : (
             <div className="space-y-3">
-              {doctors.map((doctor, index) => (
+              {registeredDoctorsWithDetails.map((doctor, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between bg-gray-50 p-4 rounded-lg"
                 >
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">
-                      Doctor #{index + 1}
-                    </p>
-                    <p className="text-sm text-gray-500 font-mono">{doctor}</p>
+                    <h3 className="font-semibold text-gray-900">{doctor.name}</h3>
+                    <p className="text-sm text-gray-600">{doctor.profession} • {doctor.hospital}</p>
+                    <p className="text-xs text-gray-500 font-mono mt-1">{doctor.address}</p>
                   </div>
                   <button
-                    onClick={() => handleRemoveDoctor(doctor)}
+                    onClick={() => handleRemoveDoctor(doctor.address)}
                     className="bg-red-100 text-red-700 px-4 py-2 rounded-lg hover:bg-red-200 flex items-center gap-2"
                   >
                     <svg

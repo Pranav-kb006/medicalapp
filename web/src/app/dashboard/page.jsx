@@ -100,11 +100,10 @@ export default function DashboardPage() {
           {/* Patient Dashboard */}
           <button
             onClick={() => navigateTo("/patient")}
-            className={`bg-white rounded-xl p-8 shadow-sm border-2 transition-all text-left hover:shadow-md ${
-              role === "patient"
+            className={`bg-white rounded-xl p-8 shadow-sm border-2 transition-all text-left hover:shadow-md ${role === "patient"
                 ? "border-blue-500"
                 : "border-gray-200 hover:border-blue-300"
-            }`}
+              }`}
           >
             <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mb-4">
               <svg
@@ -137,11 +136,10 @@ export default function DashboardPage() {
           {/* Doctor Dashboard */}
           <button
             onClick={() => navigateTo("/doctor")}
-            className={`bg-white rounded-xl p-8 shadow-sm border-2 transition-all text-left hover:shadow-md ${
-              role === "doctor"
+            className={`bg-white rounded-xl p-8 shadow-sm border-2 transition-all text-left hover:shadow-md ${role === "doctor"
                 ? "border-purple-500"
                 : "border-gray-200 hover:border-purple-300"
-            }`}
+              }`}
           >
             <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mb-4">
               <svg
@@ -174,11 +172,10 @@ export default function DashboardPage() {
           {/* Admin Dashboard */}
           <button
             onClick={() => navigateTo("/admin")}
-            className={`bg-white rounded-xl p-8 shadow-sm border-2 transition-all text-left hover:shadow-md ${
-              role === "admin"
+            className={`bg-white rounded-xl p-8 shadow-sm border-2 transition-all text-left hover:shadow-md ${role === "admin"
                 ? "border-green-500"
                 : "border-gray-200 hover:border-green-300"
-            }`}
+              }`}
           >
             <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mb-4">
               <svg
